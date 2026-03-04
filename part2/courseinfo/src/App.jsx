@@ -46,9 +46,32 @@ const App = () => {
 
   const addPerson = (event) => {
     event.preventDefault()
-    if (persons.some(person => person.name === newName)) {
-      alert(`${newName} is already added to phonebook`)
-      return
+    
+    const existingPerson = persons.find(p => p.name === newName)
+
+    if (existingPerson) {
+      const confirmUpdate = window.confirm(
+        `${newName} is already added to phonebook, replace the old number with a new one?`
+      )
+
+      if (confirmUpdate) {
+        const changedPerson = { ...existingPerson, number: newNumber }
+
+        personService
+          .update(existingPerson.id, changedPerson)
+          .then(returnedPerson => {
+            setPersons(persons.map(person => 
+              person.id !== existingPerson.id ? person : returnedPerson
+            ))
+            setNewName('')
+            setNewNumber('')
+          })
+          .catch(error => {
+            alert(`Information of ${newName} has already been removed from server`)
+            setPersons(persons.filter(p => p.id !== existingPerson.id))
+          })
+      }
+      return 
     }
 
     const personObject = {
@@ -72,37 +95,3 @@ const App = () => {
         .then(() => {
           setPersons(persons.filter(p => p.id !== id))
         })
-        .catch(error => {
-          alert(`The person '${name}' was already deleted from server`)
-          setPersons(persons.filter(p => p.id !== id))
-        })
-    }
-  }
-
-  const personsToShow = searchTerm === ''
-    ? persons
-    : persons.filter(person => 
-        person.name.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-
-  return (
-    <div>
-      <h2>Phonebook</h2>
-      <Filter searchTerm={searchTerm} handleSearch={handleSearch} />
-      
-      <h3>Add a new</h3>
-      <PersonForm 
-        addPerson={addPerson}
-        newName={newName}
-        handleNameChange={handleNameChange}
-        newNumber={newNumber}
-        handleNumberChange={handleNumberChange}
-      />
-      
-      <h3>Numbers</h3>
-      <Persons personsToShow={personsToShow} deletePerson={deletePerson} />
-    </div>
-  )
-}
-
-export default App
