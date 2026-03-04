@@ -1,9 +1,9 @@
-import {useState, useEffect} from 'react'
+import { useState, useEffect } from 'react'
 import axios from 'axios'
 
-const Filter = ({searchTerm, handleSearch}) => (
+const Filter = ({ searchTerm, handleSearch }) => (
   <div>
-   filter shown with <input value={searchTerm} onChange={handleSearch} />
+    filter shown with <input value={searchTerm} onChange={handleSearch} />
   </div>
 )
 
@@ -15,18 +15,18 @@ const PersonForm = (props) => (
   </form>
 )
 
-const Persons = ({personsToShow}) => (
+const Persons = ({ personsToShow }) => (
   <ul>
     {personsToShow.map(person => (
-    <li key={person.id}>
-      {person.name} {person.number}
-    </li>
+      <li key={person.id}>
+        {person.name} {person.number}
+      </li>
     ))}
   </ul>
 )
 
 const App = () => {
-  const [persons, setPersons] = useState([]) 
+  const [persons, setPersons] = useState([])
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [searchTerm, setSearchTerm] = useState('')
@@ -37,7 +37,7 @@ const App = () => {
       .then(response => {
         setPersons(response.data)
       })
-  }, []) 
+  }, [])
 
   const handleNameChange = (event) => setNewName(event.target.value)
   const handleNumberChange = (event) => setNewNumber(event.target.value)
@@ -45,6 +45,7 @@ const App = () => {
 
   const addPerson = (event) => {
     event.preventDefault()
+    
     if (persons.some(person => person.name === newName)) {
       alert(`${newName} is already added to phonebook`)
       return
@@ -52,13 +53,16 @@ const App = () => {
 
     const personObject = {
       name: newName,
-      number: newNumber,
-      id: persons.length + 1
+      number: newNumber
     }
 
-    setPersons(persons.concat(personObject))
-    setNewName('')
-    setNewNumber('')
+    axios
+      .post('http://localhost:3001/persons', personObject)
+      .then(response => {
+        setPersons(persons.concat(response.data))
+        setNewName('')
+        setNewNumber('')
+      })
   }
 
   const personsToShow = searchTerm === ''
@@ -71,6 +75,7 @@ const App = () => {
     <div>
       <h2>Phonebook</h2>
       <Filter searchTerm={searchTerm} handleSearch={handleSearch} />
+      
       <h3>Add a new</h3>
       <PersonForm 
         addPerson={addPerson}
@@ -79,6 +84,7 @@ const App = () => {
         newNumber={newNumber}
         handleNumberChange={handleNumberChange}
       />
+      
       <h3>Numbers</h3>
       <Persons personsToShow={personsToShow} />
     </div>
