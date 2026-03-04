@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import personService from './services/persons' 
+import personService from './services/persons'
 
 const Filter = ({ searchTerm, handleSearch }) => (
   <div>
@@ -15,11 +15,12 @@ const PersonForm = (props) => (
   </form>
 )
 
-const Persons = ({ personsToShow }) => (
+const Persons = ({ personsToShow, deletePerson }) => (
   <ul>
     {personsToShow.map(person => (
       <li key={person.id}>
-        {person.name} {person.number}
+        {person.name} {person.number} {' '}
+        <button onClick={() => deletePerson(person.id, person.name)}>delete</button>
       </li>
     ))}
   </ul>
@@ -45,7 +46,6 @@ const App = () => {
 
   const addPerson = (event) => {
     event.preventDefault()
-    
     if (persons.some(person => person.name === newName)) {
       alert(`${newName} is already added to phonebook`)
       return
@@ -63,6 +63,20 @@ const App = () => {
         setNewName('')
         setNewNumber('')
       })
+  }
+
+  const deletePerson = (id, name) => {
+    if (window.confirm(`Delete ${name}?`)) {
+      personService
+        .remove(id)
+        .then(() => {
+          setPersons(persons.filter(p => p.id !== id))
+        })
+        .catch(error => {
+          alert(`The person '${name}' was already deleted from server`)
+          setPersons(persons.filter(p => p.id !== id))
+        })
+    }
   }
 
   const personsToShow = searchTerm === ''
@@ -86,7 +100,7 @@ const App = () => {
       />
       
       <h3>Numbers</h3>
-      <Persons personsToShow={personsToShow} />
+      <Persons personsToShow={personsToShow} deletePerson={deletePerson} />
     </div>
   )
 }
